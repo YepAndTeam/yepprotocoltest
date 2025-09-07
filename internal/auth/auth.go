@@ -51,17 +51,14 @@ func (s *Service) Register(email, phone, password, level string) (*core.User, er
 		return nil, err
 	}
 
-	phoneHash := ""
-	if phone != "" {
-		phoneHash = HashPhone(phone)
-		fmt.Printf("DEBUG: Phone: %s, Hash: %s\n", phone, phoneHash) // Для отладки
-	}
+	phoneHash := HashPhone(phone) // всегда хэшируем, даже если пустой
+	fmt.Printf("DEBUG: Phone: %s, Hash: %s\n", phone, phoneHash)
 
 	user := &core.User{
 		YUI:          fmt.Sprintf("yep_%d", time.Now().UnixNano()),
 		Email:        email,
-		Phone:        "",
-		PhoneHash:    phoneHash, // Важно!
+		Phone:        "",        // ты всё равно не сохраняешь реальный номер
+		PhoneHash:    phoneHash, // сохраняем хэш
 		PasswordHash: string(hash),
 		Level:        level,
 		IsActive:     false,
