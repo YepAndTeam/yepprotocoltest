@@ -17,6 +17,7 @@
             color: #ddd;
             font-family: 'JetBrains Mono', monospace;
             height: 100vh;
+            height: 100dvh; /* Для мобильных браузеров */
             overflow: hidden;
             font-size: 14px;
             touch-action: manipulation;
@@ -24,9 +25,11 @@
 
         .terminal {
             height: 100vh;
+            height: 100dvh;
             background: #111;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .terminal-header {
@@ -40,6 +43,9 @@
             font-size: 12px;
             flex-shrink: 0;
             border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .terminal-buttons {
@@ -59,6 +65,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-height: 0; /* Важно для flex */
         }
 
         .terminal-content {
@@ -66,7 +73,7 @@
             padding: 15px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 20px;
+            min-height: 0; /* Важно для скролла */
         }
 
         .terminal-line {
@@ -101,6 +108,7 @@
             outline: none;
             border-radius: 4px;
             width: 100%;
+            -webkit-appearance: none; /* Для iOS */
         }
 
         input:focus, select:focus {
@@ -122,6 +130,7 @@
             text-transform: uppercase;
             font-weight: 600;
             letter-spacing: 0.5px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         button:hover, button:active {
@@ -141,7 +150,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .error {
@@ -160,12 +169,18 @@
             color: #00aaff;
         }
 
+        .system {
+            color: #888;
+            font-style: italic;
+        }
+
         #messages {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 10px 0;
             margin-bottom: 10px;
+            min-height: 0;
         }
 
         .message-line {
@@ -176,6 +191,18 @@
             background: rgba(255, 255, 255, 0.02);
             word-wrap: break-word;
             font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .message-line.error {
@@ -198,16 +225,27 @@
             background: rgba(0, 170, 255, 0.1);
         }
 
+        .message-line.system {
+            border-left-color: #888;
+            background: rgba(136, 136, 136, 0.05);
+            font-style: italic;
+            color: #888;
+        }
+
+        .message-line.own {
+            border-left-color: #00ff41;
+            background: rgba(0, 255, 65, 0.15);
+            margin-left: 20px;
+        }
+
         .chat-input-container {
-            position: sticky;
-            bottom: 0;
             background: #111;
             border-top: 1px solid #333;
             padding: 15px;
             display: flex;
             gap: 10px;
             align-items: center;
-            z-index: 100;
+            flex-shrink: 0;
         }
 
         #messageInput {
@@ -234,6 +272,7 @@
             margin: 0;
             cursor: pointer;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
         .send-button:hover, .send-button:active {
@@ -263,6 +302,12 @@
         .status-indicator.connected {
             background: #00ff41;
             box-shadow: 0 0 10px #00ff41;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .status-indicator.disconnected {
@@ -290,6 +335,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-height: 0;
         }
 
         .disconnect-btn {
@@ -307,13 +353,17 @@
             background: #ff5555;
         }
 
-        .blink {
-            animation: blink 1s infinite;
+        .reconnect-banner {
+            background: #ffaa00;
+            color: #000;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
         }
 
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+        .reconnect-banner.show {
+            display: block;
         }
 
         ::-webkit-scrollbar {
@@ -333,7 +383,12 @@
         @media (max-width: 768px) {
             body {
                 font-size: 16px;
-                -webkit-text-size-adjust: none;
+                -webkit-text-size-adjust: 100%;
+            }
+
+            .terminal {
+                height: 100vh;
+                height: -webkit-fill-available;
             }
 
             .terminal-header {
@@ -343,6 +398,7 @@
 
             .terminal-content {
                 padding: 10px;
+                padding-bottom: env(safe-area-inset-bottom); /* Для iPhone X+ */
             }
 
             .ascii-logo {
@@ -361,10 +417,12 @@
             .status-bar {
                 font-size: 11px;
                 padding: 8px 10px;
+                padding-bottom: calc(8px + env(safe-area-inset-bottom));
             }
 
             .chat-input-container {
                 padding: 10px;
+                padding-bottom: calc(10px + env(safe-area-inset-bottom));
             }
 
             #messageInput {
@@ -402,12 +460,16 @@
 <body>
 <div class="terminal">
     <div class="terminal-header">
-        <span>YEP PROTOCOL v0.3.1 - MOBILE</span>
+        <span>YEP PROTOCOL v0.4.0</span>
         <div class="terminal-buttons">
             <div class="terminal-button"></div>
             <div class="terminal-button"></div>
             <div class="terminal-button"></div>
         </div>
+    </div>
+
+    <div class="reconnect-banner" id="reconnectBanner">
+        Reconnecting to server...
     </div>
 
     <div class="terminal-body">
@@ -442,18 +504,18 @@
 
                 <div class="input-group">
                     <span class="input-label">Email Address</span>
-                    <input type="email" id="email" placeholder="user@yep.com" value="test@yep.com">
+                    <input type="email" id="email" placeholder="user@yep.com" autocomplete="email">
                 </div>
 
                 <div class="input-group">
                     <span class="input-label">Password</span>
-                    <input type="password" id="password" placeholder="Enter password" value="password123">
+                    <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
                 </div>
 
                 <div id="registerFields" class="hidden">
                     <div class="input-group">
                         <span class="input-label">Phone Number</span>
-                        <input type="tel" id="phone" placeholder="+1234567890">
+                        <input type="tel" id="phone" placeholder="+1234567890" autocomplete="tel">
                     </div>
 
                     <div class="input-group">
@@ -468,11 +530,11 @@
 
                 <div id="otpSection" class="hidden">
                     <div class="terminal-line warning">
-                        <span class="prompt">!</span> Verification required. Check @yep_auth_bot on Telegram
+                        <span class="prompt">!</span> Verification required. Check @YEPVerifyBot on Telegram
                     </div>
                     <div class="input-group">
                         <span class="input-label">OTP Verification Code</span>
-                        <input type="text" id="otpCode" placeholder="000000" maxlength="6" inputmode="numeric">
+                        <input type="text" id="otpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
                     </div>
                     <button onclick="verifyOTP()">VERIFY CODE</button>
                 </div>
@@ -494,7 +556,7 @@
             </div>
         </div>
 
-        <!-- Поле ввода сообщений закреплено внизу -->
+        <!-- Поле ввода сообщений -->
         <div id="chatInput" class="chat-input-container hidden">
             <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off">
             <button class="send-button" onclick="sendMessage()" title="Send">→</button>
@@ -516,9 +578,28 @@
     let ws = null;
     let currentYUI = '';
     let currentLevel = '';
+    let currentEmail = '';
     let awaitingOTP = false;
     let phoneHash = '';
     let authMode = '';
+    let reconnectAttempts = 0;
+    let reconnectTimer = null;
+
+    // Проверяем сохраненную сессию при загрузке
+    window.onload = () => {
+        addMessage('YEP Protocol Terminal initialized', 'success');
+
+        const savedToken = localStorage.getItem('yep_token');
+        const savedYUI = localStorage.getItem('yep_yui');
+        const savedEmail = localStorage.getItem('yep_email');
+
+        if (savedToken && savedYUI) {
+            addMessage('Found saved session. Attempting to reconnect...', 'info');
+            reconnectWithToken(savedToken, savedYUI, savedEmail);
+        } else {
+            addMessage('Select authentication mode to continue', 'info');
+        }
+    };
 
     async function hashPhone(phone) {
         phone = phone.replace(/[\+\s-]/g, '');
@@ -544,6 +625,26 @@
         addMessage(`MODE: ${mode.toUpperCase()}`, 'info');
     }
 
+    function reconnectWithToken(token, yui, email) {
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const host = window.location.host;
+
+        ws = new WebSocket(`${protocol}://${host}/ws`);
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({
+                token: token
+            }));
+
+            reconnectAttempts = 0;
+            document.getElementById('reconnectBanner').classList.remove('show');
+        };
+
+        ws.onmessage = handleMessage;
+        ws.onerror = handleError;
+        ws.onclose = handleClose;
+    }
+
     async function authenticate() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -554,6 +655,7 @@
             return;
         }
 
+        currentEmail = email;
         addMessage(`Connecting to YEP Protocol...`, 'info');
 
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -571,13 +673,11 @@
                 const phone = document.getElementById('phone').value;
                 if (!phone) {
                     addMessage('Phone required for registration', 'error');
+                    ws.close();
                     return;
                 }
-                // ИСПРАВЛЕНО: отправляем phone, не phone_hash
-                authData.phone = phone;  // Отправляем обычный номер
+                authData.phone = phone;
                 authData.level = document.getElementById('level').value;
-
-                // Сохраняем хеш локально для OTP верификации
                 phoneHash = await hashPhone(phone);
             }
 
@@ -585,54 +685,98 @@
             addMessage('Authentication request sent...', 'info');
         };
 
-        ws.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
+        ws.onmessage = handleMessage;
+        ws.onerror = handleError;
+        ws.onclose = handleClose;
+    }
 
-            if (msg.type === 'VERIFICATION_REQUIRED') {
-                awaitingOTP = true;
-                document.getElementById('otpSection').classList.remove('hidden');
-                addMessage('OTP verification required. Check Telegram bot.', 'warning');
-                currentYUI = msg.yui;
+    function handleMessage(event) {
+        const msg = JSON.parse(event.data);
 
-            } else if (msg.type === 'AUTH_SUCCESS') {
-                currentYUI = msg.yui;
-                currentLevel = msg.level;
+        if (msg.type === 'VERIFICATION_REQUIRED') {
+            awaitingOTP = true;
+            document.getElementById('otpSection').classList.remove('hidden');
+            addMessage('OTP verification required. Check @YEPVerifyBot on Telegram.', 'warning');
+            currentYUI = msg.yui;
 
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('chatSection').classList.remove('hidden');
-                document.getElementById('chatInput').classList.remove('hidden');
-                document.getElementById('statusIndicator').classList.remove('disconnected');
-                document.getElementById('statusIndicator').classList.add('connected');
-                document.getElementById('statusText').textContent = 'CONNECTED';
-                document.getElementById('userInfo').textContent = `${currentYUI} | ${currentLevel}`;
+        } else if (msg.type === 'AUTH_SUCCESS') {
+            currentYUI = msg.yui;
+            currentLevel = msg.level;
 
-                addMessage('Успешная авторизация.', 'success');
-
-                // Фокус на поле ввода
-                setTimeout(() => {
-                    document.getElementById('messageInput').focus();
-                }, 100);
-
-            } else if (msg.type === 'ERROR') {
-                if (awaitingOTP && msg.content.includes('Invalid OTP')) {
-                    addMessage('Неверный код. Попробуйте ещё раз.', 'error');
-                } else {
-                    addMessage(`ERROR: ${msg.content}`, 'error');
-                }
-
-            } else if (msg.type === 'MESSAGE') {
-                addMessage(`[${new Date().toLocaleTimeString()}] ${msg.content}`, 'info');
+            // Сохраняем токен и данные
+            if (msg.token) {
+                localStorage.setItem('yep_token', msg.token);
+                localStorage.setItem('yep_yui', msg.yui);
+                localStorage.setItem('yep_email', currentEmail || '');
             }
-        };
 
-        ws.onerror = () => {
-            addMessage('Connection error', 'error');
-        };
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('chatSection').classList.remove('hidden');
+            document.getElementById('chatInput').classList.remove('hidden');
+            document.getElementById('statusIndicator').classList.remove('disconnected');
+            document.getElementById('statusIndicator').classList.add('connected');
+            document.getElementById('statusText').textContent = 'CONNECTED';
 
-        ws.onclose = () => {
-            addMessage('Disconnected from server', 'warning');
+            const displayName = currentEmail ? currentEmail.split('@')[0] : currentYUI;
+            document.getElementById('userInfo').textContent = `${displayName} | Level ${currentLevel}`;
+
+            addMessage('Authentication successful. Welcome to YEP!', 'success');
+
+            setTimeout(() => {
+                document.getElementById('messageInput').focus();
+            }, 100);
+
+        } else if (msg.type === 'MESSAGE_SENT') {
+            // Подтверждение отправки - ничего не делаем, сообщение уже показано
+
+        } else if (msg.type === 'MESSAGE') {
+            // Сообщения от других пользователей
+            const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            addMessage(`[${time}] ${msg.content}`, 'info');
+
+        } else if (msg.type === 'USER_JOIN') {
+            addMessage(msg.content, 'system');
+
+        } else if (msg.type === 'USER_LEAVE') {
+            addMessage(msg.content, 'system');
+
+        } else if (msg.type === 'ERROR') {
+            if (awaitingOTP && msg.content.includes('Invalid')) {
+                addMessage('Invalid code. Please try again.', 'error');
+            } else if (msg.content.includes('Authentication required')) {
+                // Токен истек, очищаем и показываем форму логина
+                localStorage.removeItem('yep_token');
+                localStorage.removeItem('yep_yui');
+                localStorage.removeItem('yep_email');
+                resetConnection();
+                addMessage('Session expired. Please login again.', 'warning');
+            } else {
+                addMessage(`ERROR: ${msg.content}`, 'error');
+            }
+        }
+    }
+
+    function handleError() {
+        addMessage('Connection error', 'error');
+    }
+
+    function handleClose() {
+        addMessage('Disconnected from server', 'warning');
+
+        // Пытаемся переподключиться если есть токен
+        const savedToken = localStorage.getItem('yep_token');
+        if (savedToken && reconnectAttempts < 5) {
+            reconnectAttempts++;
+            document.getElementById('reconnectBanner').classList.add('show');
+
+            reconnectTimer = setTimeout(() => {
+                const savedYUI = localStorage.getItem('yep_yui');
+                const savedEmail = localStorage.getItem('yep_email');
+                reconnectWithToken(savedToken, savedYUI, savedEmail);
+            }, 2000 * reconnectAttempts); // Увеличиваем задержку с каждой попыткой
+        } else {
             resetConnection();
-        };
+        }
     }
 
     function verifyOTP() {
@@ -667,18 +811,33 @@
                 type: 'MESSAGE',
                 content: text
             }));
-            addMessage(`[YOU] ${text}`, 'success');
-            input.value = '';
 
-            // Прокрутка к последнему сообщению
-            setTimeout(scrollToBottom, 100);
+            // Показываем свое сообщение сразу
+            const displayName = currentEmail ? currentEmail.split('@')[0] : currentYUI;
+            const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            addMessage(`[${time}] [YOU - ${displayName}] ${text}`, 'own');
+
+            input.value = '';
+            setTimeout(scrollToBottom, 10);
+        } else {
+            addMessage('Not connected to server', 'error');
         }
     }
 
     function disconnect() {
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+        }
+
         if (ws) {
             ws.close();
         }
+
+        // Очищаем сохраненную сессию
+        localStorage.removeItem('yep_token');
+        localStorage.removeItem('yep_yui');
+        localStorage.removeItem('yep_email');
+
         resetConnection();
     }
 
@@ -691,9 +850,11 @@
         document.getElementById('statusIndicator').classList.add('disconnected');
         document.getElementById('statusText').textContent = 'DISCONNECTED';
         document.getElementById('userInfo').textContent = '';
+        document.getElementById('reconnectBanner').classList.remove('show');
         awaitingOTP = false;
         phoneHash = '';
         authMode = '';
+        reconnectAttempts = 0;
     }
 
     function clearForm() {
@@ -705,19 +866,23 @@
     }
 
     function addMessage(text, type = 'message') {
-        if (type === 'error') {
-            text = `❌ ${text}`;
-        } else if (type === 'success') {
-            text = `✅ ${text}`;
-        } else if (type === 'warning') {
-            text = `⚠️ ${text}`;
-        } else if (type === 'info') {
-            text = `ℹ️ ${text}`;
-        }
-
         const messages = document.getElementById('messages');
         const line = document.createElement('div');
         line.className = `message-line ${type}`;
+
+        // Добавляем префиксы только для системных сообщений
+        if (type === 'error') {
+            text = `❌ ${text}`;
+        } else if (type === 'success' && !text.includes('[YOU')) {
+            text = `✅ ${text}`;
+        } else if (type === 'warning') {
+            text = `⚠️ ${text}`;
+        } else if (type === 'info' && !text.includes('[')) {
+            text = `ℹ️ ${text}`;
+        } else if (type === 'system') {
+            text = `⚡ ${text}`;
+        }
+
         line.textContent = `> ${text}`;
         messages.appendChild(line);
 
@@ -726,7 +891,9 @@
 
     function scrollToBottom() {
         const messages = document.getElementById('messages');
-        messages.scrollTop = messages.scrollHeight;
+        if (messages) {
+            messages.scrollTop = messages.scrollHeight;
+        }
     }
 
     // Enter key handlers
@@ -761,17 +928,18 @@
         lastTouchEnd = now;
     }, false);
 
-    // Initial message
-    window.onload = () => {
-        addMessage('YEP Protocol Terminal initialized', 'success');
-        addMessage('Select authentication mode to continue', 'info');
-    };
+    // Фикс для мобильной клавиатуры
+    if ('visualViewport' in window) {
+        window.visualViewport.addEventListener('resize', function() {
+            document.documentElement.style.height = `${window.visualViewport.height}px`;
+        });
+    }
 
     // Обработка изменения ориентации
     window.addEventListener('orientationchange', function() {
         setTimeout(() => {
             scrollToBottom();
-        }, 500);
+        }, 300);
     });
 </script>
 </body>

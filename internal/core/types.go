@@ -18,11 +18,13 @@ type User struct {
 }
 
 type YepMessage struct {
-	Type      string `json:"type"`
-	YUI       string `json:"yui"`
-	Level     string `json:"level"`
-	Content   string `json:"content"`
-	Timestamp int64  `json:"timestamp"`
+	Type      string      `json:"type"`
+	Content   string      `json:"content"`
+	YUI       string      `json:"yui,omitempty"`
+	Level     string      `json:"level,omitempty"`
+	Token     string      `json:"token,omitempty"` // Добавь это
+	Data      interface{} `json:"data,omitempty"`  // Добавь это
+	Timestamp int64       `json:"timestamp"`
 }
 
 type YepAuth struct {
