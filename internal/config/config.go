@@ -12,8 +12,8 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:     getEnv("PORT", "8080"),
-		DBConn:   getEnv("DATABASE_URL", "user=postgres password=Beka2001 dbname=yep_hub host=localhost sslmode=disable"),
-		MongoURI: getEnv("MONGO_URI", "mongodb://localhost:27017"), // Добавь это
+		DBConn:   getEnv("DATABASE_URL", ""), // пусто по умолчанию, чтобы не использовать localhost на Railway
+		MongoURI: getEnv("MONGO_URI", ""),    // пусто по умолчанию
 		LogLevel: getEnv("LOG_LEVEL", "info"),
 	}
 }
