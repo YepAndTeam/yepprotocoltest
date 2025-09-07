@@ -1,0 +1,19 @@
+### Создай файл test.http в проекте
+### Тест авторизации YEP
+POST http://localhost:8080/auth
+Content-Type: application/json
+
+{
+  "email": "test@yep.com",
+  "phone": "+1234567890",
+  "level": "B"
+}
+
+### Тест WebSocket
+WEBSOCKET ws://localhost:8080/ws
+Content-Type: application/json
+
+{
+  "type": "MESSAGE",
+  "content": "Hello YEP!"
+}

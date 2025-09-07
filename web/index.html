@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YEP Protocol Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #ddd;
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 14px;
+            touch-action: manipulation;
+        }
+
+        .terminal {
+            height: 100vh;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            background: #222;
+            color: #ddd;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-button {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #444;
+        }
+
+        .terminal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 20px;
+        }
+
+        .terminal-line {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .prompt {
+            color: #ddd;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin: 15px 0;
+        }
+
+        .input-label {
+            color: #ddd;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            background: #1a1a1a;
+            border: 1px solid #555;
+            color: #ddd;
+            padding: 15px 12px;
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            border-color: #888;
+            background: #222;
+        }
+
+        button {
+            background: #333;
+            border: 1px solid #555;
+            color: #ddd;
+            padding: 15px 20px;
+            font-family: inherit;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 8px 0;
+            transition: all 0.2s;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover, button:active {
+            background: #444;
+            transform: translateY(-1px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .button-group button {
+            flex: 1;
+            margin: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #ff3333;
+        }
+
+        .success {
+            color: #00ff41;
+        }
+
+        .warning {
+            color: #ffaa00;
+        }
+
+        .info {
+            color: #00aaff;
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 10px 0;
+            margin-bottom: 10px;
+        }
+
+        .message-line {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-left: 3px solid transparent;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+
+        .message-line.error {
+            border-left-color: #ff3333;
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        .message-line.success {
+            border-left-color: #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .message-line.warning {
+            border-left-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+        }
+
+        .message-line.info {
+            border-left-color: #00aaff;
+            background: rgba(0, 170, 255, 0.1);
+        }
+
+        .chat-input-container {
+            position: sticky;
+            bottom: 0;
+            background: #111;
+            border-top: 1px solid #333;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #messageInput {
+            flex: 1;
+            margin: 0;
+            border-radius: 25px;
+            padding: 15px 20px;
+            background: #1a1a1a;
+            border: 1px solid #555;
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #00ff41;
+            color: #000;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-button:hover, .send-button:active {
+            background: #00dd35;
+            transform: scale(0.95);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-top: 1px solid #333;
+            background: #1a1a1a;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.connected {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        .status-indicator.disconnected {
+            background: #ff3333;
+            box-shadow: 0 0 10px #ff3333;
+        }
+
+        .ascii-logo {
+            color: #ddd;
+            font-size: 6px;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            white-space: pre;
+            text-align: center;
+        }
+
+        .auth-container {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .disconnect-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 8px 12px;
+            font-size: 12px;
+            background: #ff3333;
+            border: 1px solid #ff5555;
+            z-index: 200;
+        }
+
+        .disconnect-btn:hover {
+            background: #ff5555;
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        /* Мобильные улучшения */
+        @media (max-width: 768px) {
+            body {
+                font-size: 16px;
+                -webkit-text-size-adjust: none;
+            }
+
+            .terminal-header {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .terminal-content {
+                padding: 10px;
+            }
+
+            .ascii-logo {
+                font-size: 5px;
+            }
+
+            input, select, button {
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+
+            .message-line {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+
+            .status-bar {
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+
+            .chat-input-container {
+                padding: 10px;
+            }
+
+            #messageInput {
+                padding: 12px 16px;
+            }
+
+            .send-button {
+                width: 45px;
+                height: 45px;
+                font-size: 16px;
+            }
+        }
+
+        /* Очень маленькие экраны */
+        @media (max-width: 480px) {
+            .ascii-logo {
+                font-size: 4px;
+                margin-bottom: 10px;
+            }
+
+            .terminal-header {
+                font-size: 10px;
+            }
+
+            .input-group {
+                margin: 10px 0;
+            }
+
+            button {
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="terminal">
+    <div class="terminal-header">
+        <span>YEP PROTOCOL v0.3.1 - MOBILE</span>
+        <div class="terminal-buttons">
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+        </div>
+    </div>
+
+    <div class="terminal-body">
+        <div class="terminal-content">
+            <div class="ascii-logo">
+                ██╗   ██╗███████╗██████╗
+                ╚██╗ ██╔╝██╔════╝██╔══██╗
+                ╚████╔╝ █████╗  ██████╔╝
+                ╚██╔╝  ██╔══╝  ██╔═══╝
+                ██║   ███████╗██║
+                ╚═╝   ╚══════╝╚═╝</div>
+
+            <div class="terminal-line">
+                <span class="prompt">$</span> Initializing YEP Protocol Security System...
+            </div>
+            <div class="terminal-line success">
+                <span class="prompt">$</span> System ready. Choose authentication mode.
+            </div>
+
+            <div id="authSection" class="auth-container">
+                <div class="terminal-line">
+                    <span class="prompt">$</span> Authentication Required
+                </div>
+
+                <div class="input-group">
+                    <span class="input-label">Authentication Mode</span>
+                    <select id="authMode" onchange="toggleAuthMode()">
+                        <option value="login">LOGIN</option>
+                        <option value="register">REGISTER</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <span class="input-label">Email Address</span>
+                    <input type="email" id="email" placeholder="user@yep.com" value="test@yep.com">
+                </div>
+
+                <div class="input-group">
+                    <span class="input-label">Password</span>
+                    <input type="password" id="password" placeholder="Enter password" value="password123">
+                </div>
+
+                <div id="registerFields" class="hidden">
+                    <div class="input-group">
+                        <span class="input-label">Phone Number</span>
+                        <input type="tel" id="phone" placeholder="+1234567890">
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-label">Security Level</span>
+                        <select id="level">
+                            <option value="C">LEVEL C - BASIC</option>
+                            <option value="B" selected>LEVEL B - STANDARD</option>
+                            <option value="A">LEVEL A - MAXIMUM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="otpSection" class="hidden">
+                    <div class="terminal-line warning">
+                        <span class="prompt">!</span> Verification required. Check @yep_auth_bot on Telegram
+                    </div>
+                    <div class="input-group">
+                        <span class="input-label">OTP Verification Code</span>
+                        <input type="text" id="otpCode" placeholder="000000" maxlength="6" inputmode="numeric">
+                    </div>
+                    <button onclick="verifyOTP()">VERIFY CODE</button>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="authenticate()">EXECUTE</button>
+                    <button onclick="clearForm()">CLEAR</button>
+                </div>
+            </div>
+
+            <div id="chatSection" class="hidden chat-container">
+                <button class="disconnect-btn" onclick="disconnect()">DISCONNECT</button>
+
+                <div class="terminal-line">
+                    <span class="prompt">$</span> Connection established
+                </div>
+
+                <div id="messages"></div>
+            </div>
+        </div>
+
+        <!-- Поле ввода сообщений закреплено внизу -->
+        <div id="chatInput" class="chat-input-container hidden">
+            <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off">
+            <button class="send-button" onclick="sendMessage()" title="Send">→</button>
+        </div>
+
+        <div class="status-bar">
+            <div>
+                <span class="status-indicator disconnected" id="statusIndicator"></span>
+                <span id="statusText">DISCONNECTED</span>
+            </div>
+            <div>
+                <span id="userInfo"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    let currentYUI = '';
+    let currentLevel = '';
+    let awaitingOTP = false;
+    let phoneHash = '';
+    let authMode = '';
+
+    async function hashPhone(phone) {
+        phone = phone.replace(/[\+\s-]/g, '');
+        const salted = phone + 'yep-salt-2024';
+        const encoder = new TextEncoder();
+        const data = encoder.encode(salted);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
+
+    function toggleAuthMode() {
+        const mode = document.getElementById('authMode').value;
+        const registerFields = document.getElementById('registerFields');
+
+        if (mode === 'register') {
+            registerFields.classList.remove('hidden');
+        } else {
+            registerFields.classList.add('hidden');
+        }
+
+        addMessage(`MODE: ${mode.toUpperCase()}`, 'info');
+    }
+
+    async function authenticate() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        authMode = document.getElementById('authMode').value;
+
+        if (!email || !password) {
+            addMessage('Email and password required', 'error');
+            return;
+        }
+
+        addMessage(`Connecting to YEP Protocol...`, 'info');
+
+        ws = new WebSocket('ws://localhost:8080/ws');
+
+        ws.onopen = async () => {
+            const authData = {
+                email: email,
+                password: password,
+                is_login: authMode === 'login'
+            };
+
+            if (authMode === 'register') {
+                const phone = document.getElementById('phone').value;
+                if (!phone) {
+                    addMessage('Phone required for registration', 'error');
+                    return;
+                }
+                phoneHash = await hashPhone(phone);
+                authData.phone_hash = phoneHash;
+                authData.level = document.getElementById('level').value;
+            }
+
+            ws.send(JSON.stringify(authData));
+            addMessage('Authentication request sent...', 'info');
+        };
+
+        ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === 'VERIFICATION_REQUIRED') {
+                awaitingOTP = true;
+                document.getElementById('otpSection').classList.remove('hidden');
+                addMessage('OTP verification required. Check Telegram bot.', 'warning');
+                currentYUI = msg.yui;
+
+            } else if (msg.type === 'AUTH_SUCCESS') {
+                currentYUI = msg.yui;
+                currentLevel = msg.level;
+
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('chatSection').classList.remove('hidden');
+                document.getElementById('chatInput').classList.remove('hidden');
+                document.getElementById('statusIndicator').classList.remove('disconnected');
+                document.getElementById('statusIndicator').classList.add('connected');
+                document.getElementById('statusText').textContent = 'CONNECTED';
+                document.getElementById('userInfo').textContent = `${currentYUI} | ${currentLevel}`;
+
+                addMessage('Успешная авторизация.', 'success');
+
+                // Фокус на поле ввода
+                setTimeout(() => {
+                    document.getElementById('messageInput').focus();
+                }, 100);
+
+            } else if (msg.type === 'ERROR') {
+                if (awaitingOTP && msg.content.includes('Invalid OTP')) {
+                    addMessage('Неверный код. Попробуйте ещё раз.', 'error');
+                } else {
+                    addMessage(`ERROR: ${msg.content}`, 'error');
+                }
+
+            } else if (msg.type === 'MESSAGE') {
+                addMessage(`[${new Date().toLocaleTimeString()}] ${msg.content}`, 'info');
+            }
+        };
+
+        ws.onerror = () => {
+            addMessage('Connection error', 'error');
+        };
+
+        ws.onclose = () => {
+            addMessage('Disconnected from server', 'warning');
+            resetConnection();
+        };
+    }
+
+    function verifyOTP() {
+        const code = document.getElementById('otpCode').value;
+
+        if (!code || code.length !== 6) {
+            addMessage('Invalid OTP format', 'error');
+            return;
+        }
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            const otpData = {
+                type: 'OTP_VERIFY',
+                code: code
+            };
+            if (phoneHash) {
+                otpData.phone_hash = phoneHash;
+            }
+            ws.send(JSON.stringify(otpData));
+            addMessage('Verifying OTP...', 'info');
+        }
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'MESSAGE',
+                content: text
+            }));
+            addMessage(`[YOU] ${text}`, 'success');
+            input.value = '';
+
+            // Прокрутка к последнему сообщению
+            setTimeout(scrollToBottom, 100);
+        }
+    }
+
+    function disconnect() {
+        if (ws) {
+            ws.close();
+        }
+        resetConnection();
+    }
+
+    function resetConnection() {
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('chatSection').classList.add('hidden');
+        document.getElementById('chatInput').classList.add('hidden');
+        document.getElementById('otpSection').classList.add('hidden');
+        document.getElementById('statusIndicator').classList.remove('connected');
+        document.getElementById('statusIndicator').classList.add('disconnected');
+        document.getElementById('statusText').textContent = 'DISCONNECTED';
+        document.getElementById('userInfo').textContent = '';
+        awaitingOTP = false;
+        phoneHash = '';
+        authMode = '';
+    }
+
+    function clearForm() {
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('otpCode').value = '';
+        addMessage('Form cleared', 'info');
+    }
+
+    function addMessage(text, type = 'message') {
+        if (type === 'error') {
+            text = `❌ ${text}`;
+        } else if (type === 'success') {
+            text = `✅ ${text}`;
+        } else if (type === 'warning') {
+            text = `⚠️ ${text}`;
+        } else if (type === 'info') {
+            text = `ℹ️ ${text}`;
+        }
+
+        const messages = document.getElementById('messages');
+        const line = document.createElement('div');
+        line.className = `message-line ${type}`;
+        line.textContent = `> ${text}`;
+        messages.appendChild(line);
+
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        const messages = document.getElementById('messages');
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Enter key handlers
+    document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            if (e.target.id === 'messageInput') {
+                e.preventDefault();
+                sendMessage();
+            } else if (e.target.id === 'otpCode') {
+                e.preventDefault();
+                verifyOTP();
+            } else if (e.target.id === 'password' && !awaitingOTP) {
+                e.preventDefault();
+                authenticate();
+            }
+        }
+    });
+
+    // Prevent zoom on iOS
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+
+    // Initial message
+    window.onload = () => {
+        addMessage('YEP Protocol Terminal initialized', 'success');
+        addMessage('Select authentication mode to continue', 'info');
+    };
+
+    // Обработка изменения ориентации
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            scrollToBottom();
+        }, 500);
+    });
+</script>
+</body>
+</html>
