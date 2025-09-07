@@ -54,7 +54,7 @@ func (h *TelegramVerifyHandler) HandleSaveCode(w http.ResponseWriter, r *http.Re
 	}
 
 	// Сохраняем код по phone_hash
-	h.auth.StoreOTPByPhoneHash(req.PhoneHash, req.Code)
+	h.auth.StoreOTP(req.PhoneHash, req.Code)
 
 	// Также можно сохранить в БД для надёжности
 	h.db.SaveOTP(req.PhoneHash, req.Code, req.TelegramID)
