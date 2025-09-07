@@ -14,21 +14,20 @@ import (
 )
 
 func main() {
-	// Загружаем конфиг из переменных окружения
+	// Загружаем конфиг
 	cfg := config.Load()
 
-	// Проверяем, что переменные окружения подхватились
 	fmt.Println("🔹 DATABASE_URL:", cfg.DBConn)
 	fmt.Println("🔹 MONGO_URI:", cfg.MongoURI)
 
-	// Подключение к PostgreSQL
+	// PostgreSQL
 	db, err := storage.NewDB(cfg.DBConn)
 	if err != nil {
 		log.Fatal("Failed to connect to PostgreSQL:", err)
 	}
 	defer db.Close()
 
-	// Подключение к MongoDB
+	// MongoDB
 	mongodb, err := storage.NewMongoDB(cfg.MongoURI)
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB:", err)
@@ -39,7 +38,7 @@ func main() {
 	authService := auth.NewService(db, mongodb)
 	telegramHandler := auth.NewTelegramVerifyHandler(db, authService)
 
-	// WebSocket handler
+	// WS handler
 	wsHandler := ws.NewHandler(authService, db, mongodb)
 
 	// HTTP роуты
@@ -60,17 +59,21 @@ func main() {
 		json.NewEncoder(w).Encode(messages)
 	})
 
-	// Запуск сервера
-	addr := fmt.Sprintf(":%s", cfg.Port)
+	// Определяем порт
+	port := cfg.Port
+	if port == "" {
+		port = "8080"
+	}
+
+	addr := fmt.Sprintf(":%s", port)
+
 	fmt.Printf("🚀 YEP Protocol v0.3\n")
-	fmt.Printf("📡 WebSocket: ws://localhost%s/ws\n", addr)
-	fmt.Printf("🌐 Test page: http://localhost%s/\n", addr)
-	fmt.Printf("💾 MongoDB: Connected for messages\n")
-	fmt.Printf("🐘 PostgreSQL: Connected for users\n")
+	fmt.Printf("🌐 Server listening on %s\n", addr)
 
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
+// serveHTML отдает статический фронт
 func serveHTML(w http.ResponseWriter, r *http.Request) {
 	html, err := os.ReadFile("web/index.html")
 	if err != nil {
@@ -78,7 +81,6 @@ func serveHTML(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(html)
 }

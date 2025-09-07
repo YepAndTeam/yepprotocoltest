@@ -556,7 +556,10 @@
 
         addMessage(`Connecting to YEP Protocol...`, 'info');
 
-        ws = new WebSocket('ws://localhost:8080/ws');
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const host = window.location.host; // автоматически подставит домен или localhost
+        ws = new WebSocket(`${protocol}://${host}/ws`);
+
 
         ws.onopen = async () => {
             const authData = {
