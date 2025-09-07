@@ -25,6 +25,29 @@ type TelegramVerification struct {
 	PhoneHash string `json:"phone_hash"`
 }
 
+func (h *TelegramVerifyHandler) HandleTelegramCheck(w http.ResponseWriter, r *http.Request) {
+	var req TelegramVerification
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.db.GetUserByPhoneHash(req.PhoneHash)
+	if err == nil && user != nil {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+			"exists": true,
+			"yui":    user.YUI,
+		}); err != nil {
+			fmt.Printf("DEBUG: Response encode error: %v\n", err)
+			http.Error(w, "failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		http.Error(w, "not found", http.StatusNotFound)
+	}
+}
+
 func (h *TelegramVerifyHandler) HandleSaveCode(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		PhoneHash  string `json:"phone_hash"`
@@ -33,7 +56,12 @@ func (h *TelegramVerifyHandler) HandleSaveCode(w http.ResponseWriter, r *http.Re
 	}
 
 	// Debug: Read and log raw request body
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("DEBUG: Failed to read request body: %v\n", err)
+		http.Error(w, "failed to read request", http.StatusBadRequest)
+		return
+	}
 	fmt.Printf("DEBUG: Raw request body: %s\n", string(body))
 	r.Body = io.NopCloser(bytes.NewReader(body))
 
