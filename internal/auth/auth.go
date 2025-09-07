@@ -51,13 +51,12 @@ func (s *Service) Register(email, phone, password, level string) (*core.User, er
 		return nil, err
 	}
 	phoneHash := HashPhone(phone)
-	fmt.Printf("REGISTER DEBUG: Raw phone: '%s', Hash: %s\n", phone, phoneHash)
 
 	// Также выведи очищенный номер
 	cleaned := strings.ReplaceAll(phone, "+", "")
 	cleaned = strings.ReplaceAll(cleaned, " ", "")
 	cleaned = strings.ReplaceAll(cleaned, "-", "")
-	fmt.Printf("REGISTER DEBUG: Cleaned phone: '%s'\n", cleaned)
+
 	user := &core.User{
 		YUI:          fmt.Sprintf("yep_%d", time.Now().UnixNano()),
 		Email:        email,

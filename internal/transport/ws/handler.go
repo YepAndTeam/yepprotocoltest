@@ -62,7 +62,6 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	needsVerification := false
 
 	if !authMsg.IsLogin {
-		fmt.Printf("DEBUG: Registration attempt - Email: %s, Phone: %s\n", authMsg.Email, authMsg.Phone)
 
 		// При регистрации используем обычный phone, не hash
 		user, err = h.auth.Register(authMsg.Email, authMsg.Phone, authMsg.Password, authMsg.Level)
