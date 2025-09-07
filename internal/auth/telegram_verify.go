@@ -54,15 +54,17 @@ func (h *TelegramVerifyHandler) HandleSaveCode(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// ПРОВЕРЯЕМ СУЩЕСТВОВАНИЕ ПОЛЬЗОВАТЕЛЯ
+	fmt.Printf("DEBUG: Telegram bot request - phone_hash: %s, code: %s\n", req.PhoneHash, req.Code)
+
+	// Проверяем существование пользователя
 	user, err := h.db.GetUserByPhoneHash(req.PhoneHash)
-	if err != nil || user == nil {
+	if err != nil {
 		fmt.Printf("DEBUG: User not found for phone_hash: %s\n", req.PhoneHash)
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
 
-	fmt.Printf("DEBUG: User found - YUI: %s, saving OTP code: %s\n", user.YUI, req.Code)
+	fmt.Printf("DEBUG: User found - YUI: %s\n", user.YUI)
 
 	h.auth.StoreOTP(req.PhoneHash, req.Code)
 	h.db.SaveOTP(req.PhoneHash, req.Code, req.TelegramID)
