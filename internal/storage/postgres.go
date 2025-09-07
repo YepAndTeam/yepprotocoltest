@@ -116,20 +116,7 @@ func (db *DB) SaveMessage(fromYUI, content string) error {
 func (db *DB) Close() error {
 	return db.conn.Close()
 }
-func (db *DB) GetUserByPhoneHash(phoneHash string) (*core.User, error) {
-	user := &core.User{}
-	query := `
-        SELECT yui, email, phone, level, created_at
-        FROM users
-        WHERE phone_hash = $1 AND is_active = true`
 
-	err := db.conn.QueryRow(query, phoneHash).Scan(
-		&user.YUI, &user.Email, &user.Phone,
-		&user.Level, &user.CreatedAt,
-	)
-
-	return user, err
-}
 func (db *DB) SaveOTP(phoneHash, code string, telegramID int64) error {
 	_, err := db.conn.Exec(`
         INSERT INTO otp_codes (phone_hash, code, expires_at, telegram_id)
@@ -166,4 +153,23 @@ func (db *DB) ActivateUserByPhoneHash(phoneHash string) error {
 		phoneHash,
 	)
 	return err
+}
+func (db *DB) GetUserByPhoneHash(phoneHash string) (*core.User, error) {
+	user := &core.User{}
+	query := `
+        SELECT yui, email, phone, phone_hash, password_hash, level, created_at, last_login, is_active
+        FROM users
+        WHERE phone_hash = $1`
+
+	err := db.conn.QueryRow(query, phoneHash).Scan(
+		&user.YUI, &user.Email, &user.Phone, &user.PhoneHash,
+		&user.PasswordHash, &user.Level,
+		&user.CreatedAt, &user.LastLogin, &user.IsActive,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return user, err
 }

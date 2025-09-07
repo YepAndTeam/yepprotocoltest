@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"yep-protocol/internal/storage"
 )
@@ -54,11 +55,14 @@ func (h *TelegramVerifyHandler) HandleSaveCode(w http.ResponseWriter, r *http.Re
 	}
 
 	// ДОБАВИТЬ ЭТУ ПРОВЕРКУ:
-	_, err := h.db.GetUserByPhoneHash(req.PhoneHash)
-	if err != nil {
+	user, err := h.db.GetUserByPhoneHash(req.PhoneHash)
+	if err != nil || user == nil {
+		log.Printf("DEBUG: User not found for phone_hash: %s", req.PhoneHash)
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
+
+	log.Printf("DEBUG: User found - YUI: %s, saving OTP", user.YUI)
 
 	// Если пользователь найден, сохраняем код
 	h.auth.StoreOTP(req.PhoneHash, req.Code)
