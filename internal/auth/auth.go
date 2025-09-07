@@ -96,10 +96,56 @@ func (s *Service) Login(email, password string) (*core.User, error) {
 }
 
 // Сохраняем OTP по phone_hash
-func (s *Service) StoreOTPByPhoneHash(phoneHash, code string) {
+func (s *Service) CreatePendingUser(email, phone string) (string, error) {
+	phoneHash := HashPhone(phone)
+	yui := fmt.Sprintf("yep_%d", time.Now().UnixNano())
+
+	s.mu.Lock()
+	s.pendingVerifications[yui] = &PendingUser{
+		User: &core.User{
+			YUI:       yui,
+			Email:     email,
+			PhoneHash: phoneHash,
+			IsActive:  false,
+		},
+		Verified:  false,
+		CreatedAt: time.Now(),
+	}
+	s.mu.Unlock()
+
+	return yui, nil
+}
+
+// Сохраняем OTP по phone_hash
+func (s *Service) StoreOTP(phoneHash, code string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.otpCodes[phoneHash] = code
+}
+
+// Верификация OTP
+func (s *Service) VerifyOTP(phoneHash, code string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	stored, ok := s.otpCodes[phoneHash]
+	if !ok || stored != code {
+		return fmt.Errorf("invalid code")
+	}
+
+	delete(s.otpCodes, phoneHash)
+
+	// Активируем пользователя
+	for _, pending := range s.pendingVerifications {
+		if pending.User.PhoneHash == phoneHash {
+			pending.User.IsActive = true
+			s.db.CreateUser(pending.User) // сохраняем в БД
+			delete(s.pendingVerifications, pending.User.YUI)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("user not found")
 }
 
 // Проверяем OTP по phone_hash
