@@ -14,18 +14,22 @@ import (
 )
 
 func main() {
-	// Конфигурация
+	// Загружаем конфиг из переменных окружения
 	cfg := config.Load()
 
-	// PostgreSQL для пользователей
+	// Проверяем, что переменные окружения подхватились
+	fmt.Println("🔹 DATABASE_URL:", cfg.DBConn)
+	fmt.Println("🔹 MONGO_URI:", cfg.MongoURI)
+
+	// Подключение к PostgreSQL
 	db, err := storage.NewDB(cfg.DBConn)
 	if err != nil {
 		log.Fatal("Failed to connect to PostgreSQL:", err)
 	}
 	defer db.Close()
 
-	// MongoDB для сообщений
-	mongodb, err := storage.NewMongoDB("mongodb://localhost:27017")
+	// Подключение к MongoDB
+	mongodb, err := storage.NewMongoDB(cfg.MongoURI)
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB:", err)
 	}
@@ -56,7 +60,7 @@ func main() {
 		json.NewEncoder(w).Encode(messages)
 	})
 
-	// Запуск
+	// Запуск сервера
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	fmt.Printf("🚀 YEP Protocol v0.3\n")
 	fmt.Printf("📡 WebSocket: ws://localhost%s/ws\n", addr)
