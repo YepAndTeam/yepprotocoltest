@@ -13,7 +13,7 @@ func Load() *Config {
 	return &Config{
 		Port:     getEnv("PORT", "8080"),
 		DBConn:   getEnv("DATABASE_URL", ""), // пусто по умолчанию, чтобы не использовать localhost на Railway
-		MongoURI: getEnv("MONGO_URI", ""),    // пусто по умолчанию
+		MongoURI: getEnv("MONGO_URL", ""),    // пусто по умолчанию
 		LogLevel: getEnv("LOG_LEVEL", "info"),
 	}
 }
