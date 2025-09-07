@@ -53,14 +53,17 @@ func (h *TelegramVerifyHandler) HandleSaveCode(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Сохраняем код по phone_hash
-	h.auth.StoreOTP(req.PhoneHash, req.Code)
+	// ДОБАВЬ ЭТУ ПРОВЕРКУ:
+	_, err := h.db.GetUserByPhoneHash(req.PhoneHash)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
 
-	// Также можно сохранить в БД для надёжности
+	// Остальное без изменений
+	h.auth.StoreOTP(req.PhoneHash, req.Code)
 	h.db.SaveOTP(req.PhoneHash, req.Code, req.TelegramID)
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"status": "ok",
-	})
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }

@@ -557,9 +557,8 @@
         addMessage(`Connecting to YEP Protocol...`, 'info');
 
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const host = window.location.host; // автоматически подставит домен или localhost
+        const host = window.location.host;
         ws = new WebSocket(`${protocol}://${host}/ws`);
-
 
         ws.onopen = async () => {
             const authData = {
@@ -574,9 +573,12 @@
                     addMessage('Phone required for registration', 'error');
                     return;
                 }
-                phoneHash = await hashPhone(phone);
-                authData.phone_hash = phoneHash;
+                // ИСПРАВЛЕНО: отправляем phone, не phone_hash
+                authData.phone = phone;  // Отправляем обычный номер
                 authData.level = document.getElementById('level').value;
+
+                // Сохраняем хеш локально для OTP верификации
+                phoneHash = await hashPhone(phone);
             }
 
             ws.send(JSON.stringify(authData));

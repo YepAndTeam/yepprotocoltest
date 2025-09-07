@@ -64,6 +64,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if !authMsg.IsLogin {
 		fmt.Printf("DEBUG: Registration attempt - Email: %s, Phone: %s\n", authMsg.Email, authMsg.Phone)
 
+		// При регистрации используем обычный phone, не hash
 		user, err = h.auth.Register(authMsg.Email, authMsg.Phone, authMsg.Password, authMsg.Level)
 		if err != nil {
 			fmt.Printf("DEBUG: Registration error: %v\n", err)
@@ -139,6 +140,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		h.handleMessages(client)
 	}
 }
+
 func (h *Handler) waitForOTP(client *Client) {
 	for {
 		var msg map[string]interface{}
@@ -157,9 +159,8 @@ func (h *Handler) waitForOTP(client *Client) {
 				continue
 			}
 
-			// Проверяем код по phone_hash
-			phoneHash := auth.HashPhone(client.user.Phone)
-			if err := h.auth.VerifyCodeByPhoneHash(phoneHash, code); err != nil {
+			// ИСПРАВЛЕНО: Используем PhoneHash из базы данных, а не хешируем Phone
+			if err := h.auth.VerifyCodeByPhoneHash(client.user.PhoneHash, code); err != nil {
 				client.conn.WriteJSON(core.YepMessage{
 					Type:    "ERROR",
 					Content: "Invalid verification code",
